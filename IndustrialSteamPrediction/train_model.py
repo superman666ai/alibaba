@@ -34,6 +34,7 @@ y = df.target
 # 标准化特征
 mm = MinMaxScaler()
 x = mm.fit_transform(x)
+y = mm.transform(y)
 
 # 结果集标准
 test_df = mm.transform(test_df)
@@ -159,7 +160,7 @@ def random_forest_regression(x_train, x_test, y_train, y_test):
 
 if __name__ == "__main__":
     # 简单回归
-    simple_regression(x_train, x_test, y_train, y_test)
+    # simple_regression(x_train, x_test, y_train, y_test)
 
     # svm
     # svr_regression(x_train, x_test, y_train, y_test)
@@ -168,7 +169,7 @@ if __name__ == "__main__":
     # bayes_regression(x_train, x_test, y_train, y_test)
 
     # 随机森林
-    # random_forest_regression(x_train, x_test, y_train, y_test)
+    random_forest_regression(x_train, x_test, y_train, y_test)
 
 
 
