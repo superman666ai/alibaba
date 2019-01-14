@@ -37,7 +37,7 @@ y = df.target
 
 """相关性热力图"""
 
-#读入数据并显示前两行
+# 读入数据并显示前两行
 
 # #相关性分析
 column = df.columns.tolist()
@@ -46,12 +46,11 @@ mcorr = df[column].corr()
 # print(mcorr)
 mcorr_data = np.array(mcorr.target)
 # print(mcorr_data)
-mask = np.zeros_like(mcorr,dtype = np.bool)# 构造与mcorr同维数矩阵 为bool型
+mask = np.zeros_like(mcorr, dtype=np.bool)  # 构造与mcorr同维数矩阵 为bool型
 mask[np.triu_indices_from(mask)] = True  # 角分线右侧为True
 cmap = sns.diverging_palette(220, 10, as_cmap=True)  # 返回matplotlib colormap对象
 g = sns.heatmap(mcorr, mask=mask, cmap=cmap, square=True, annot=True, fmt='0.2f')  # 热力图（看两两相似度）
 plt.show()
-
 
 """---------"""
 # # f_classif为内置的计算函数函数，有多种计算函数供选择；保持10%最有意义的特征
