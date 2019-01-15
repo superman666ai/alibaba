@@ -79,7 +79,7 @@ with tf.Session() as sess:
     merged = tf.summary.merge_all()
     writer = tf.summary.FileWriter(logdir="nn_boston_log", graph=sess.graph)  # 写tensorbord
     sess.run(init)
-    for i in range(n):
+    for i in range(100):
         _loss, _ = sess.run([loss, train_op], feed_dict=feed_dict_train)
 
         if i % 100 == 0:

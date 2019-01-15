@@ -51,15 +51,6 @@ if __name__ == "__main__":
     x_test_fea = x_train.iloc[:, feature]
     # y_test = training("ringergresion", x_train, y_train, x_test)
 
-    #print(type(colmat[-1]))
-    colval = colmat[-1].tolist() # 最后一行，是每个特征与目标值的相关系数
-    #print((colmat[-1]).tolist())
-    feature = [True if item > 0.5 else False for item in colval ] #只保留相关系数大于0.5的
-    feature = feature[:-1]
-    x_train_fea = x_train.iloc[:, feature]
-    x_test_fea = x_train.iloc[:, feature]
-    #y_test = training("linearregresion", x_train, y_train, x_test)
-    #y_test = training("ringergresion", x_train, y_train, x_test)
     
     y_test = training("ringergresion", x_train_fea, y_train, x_test_fea)
     np.savetxt('./result.txt', y_test)
