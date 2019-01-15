@@ -2,31 +2,38 @@
 import tensorflow as tf
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import scale
-
+from utils import save_result
 import numpy as np
 
 df = pd.read_csv('data/zhengqi_train.txt', sep='\t')
 
 test_df = pd.read_csv('data/zhengqi_test.txt', sep='\t')
 
+# 剔除认为不重要的特征
+df.drop(['V5', 'V17', 'V28', 'V22', 'V11', 'V9'], axis=1, inplace=True)
+test_df.drop(['V5', 'V17', 'V28', 'V22', 'V11', 'V9'], axis=1, inplace=True)
+
 # 数据处理
 
 x = df.iloc[:, :-1]
 y = df["target"]
+
 y = np.array(y)[:, np.newaxis]
+
+x_mm = StandardScaler()
+x = x_mm.fit_transform(x)
+test_df = x_mm.fit_transform(test_df)
+
+y_mm = StandardScaler()
+y = y_mm.fit_transform(y)
+
 
 # 数据集划分
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=1)
-
-x_train = scale(x_train)
-x_test = scale(x_test)
-
-y_train = scale(y_train)
-y_test = scale(y_test)
 
 
 # 添加层
@@ -48,46 +55,61 @@ xs = tf.placeholder(shape=[None, x_train.shape[1]], dtype=tf.float32, name="inpu
 
 ys = tf.placeholder(shape=[None, 1], dtype=tf.float32, name="y_true")
 
-keep_prob_s = tf.placeholder(dtype=tf.float32)
 
-l1 = add_layer(xs, 38, 10, activation_function=tf.nn.relu)
+l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.sigmoid)
+# l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.tanh)
+# l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.relu)
 
-pred = add_layer(l1, 10, 1)
 
-pred = tf.add(pred, 0, name='pred')
+prediction = add_layer(l1, 100, 1, activation_function=None)
 
-loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - pred), reduction_indices=[1]))  # mse
 
-tf.summary.scalar("loss", tensor=loss)
+loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),
+                     reduction_indices=[1]))
 
-train_op = tf.train.AdamOptimizer(learning_rate=0.01).minimize(loss)
 
-train_step = tf.train.GradientDescentOptimizer(0.1).minimize(loss)
+train_step = tf.train.GradientDescentOptimizer(learning_rate=0.01).minimize(loss)
 
 init = tf.global_variables_initializer()
 
-
-keep_prob=1  # 防止过拟合，取值一般在0.5到0.8。我这里是1，没有做过拟合处理
-ITER =5000  # 训练次数
+feed_dict_train = {ys: y_train, xs: x_train}
 
 
-feed_dict_train = {ys: y, xs: X, keep_prob_s: keep_prob}
 
-
+# Start training
 with tf.Session() as sess:
-    saver = tf.train.Saver(tf.global_variables(), max_to_keep=15)
-    merged = tf.summary.merge_all()
-    writer = tf.summary.FileWriter(logdir="nn_boston_log", graph=sess.graph)  # 写tensorbord
+
+    # Run the initializer
     sess.run(init)
-    for i in range(100):
-        _loss, _ = sess.run([loss, train_op], feed_dict=feed_dict_train)
 
-        if i % 100 == 0:
-            print("epoch:%d\tloss:%.5f" % (i, _loss))
-            y_pred = sess.run(pred, feed_dict=feed_dict_train)
-            rs = sess.run(merged, feed_dict=feed_dict_train)
-            writer.add_summary(summary=rs, global_step=i)  # 写tensorbord
+    # Fit all training data
+    for i in range(100000):
 
-# l1 = add_layer(xs, 1, 10, activation_function=tf.nn.relu)
-#
-# prediction = add_layer(l1, 10, 1, activation_function=None)
+        sess.run(train_step, feed_dict={xs: x_train, ys: y_train})
+        if i % 50 == 0:
+            # to see the step improvement
+            # print(sess.run(loss, feed_dict={xs: x_train, ys: y_train}))
+            a = sess.run(loss, feed_dict={xs: x_test, ys: y_test})
+            print(a, type(a))
+            #
+            # 当误差达到阈值 储存结果
+            if float(a) < 0.166:
+                y_pre = sess.run(prediction, feed_dict={xs: test_df})
+                y_pre = y_mm.inverse_transform(y_pre)
+                pre = pd.DataFrame(y_pre, columns=["0"])
+                pre = pre["0"]
+                save_result(list(pre))
+                break
+
+"""
+画出平面图形 
+# plot the real data
+fig = plt.figure()
+ax = fig.add_subplot(1,1,1)
+ax.scatter(x_train, y_train)
+plt.ion()#本次运行请注释，全局运行不要注释
+plt.show()
+
+
+"""
+
