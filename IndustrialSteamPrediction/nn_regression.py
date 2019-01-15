@@ -31,7 +31,6 @@ test_df = x_mm.fit_transform(test_df)
 y_mm = StandardScaler()
 y = y_mm.fit_transform(y)
 
-
 # 数据集划分
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=1)
 
@@ -55,20 +54,19 @@ xs = tf.placeholder(shape=[None, x_train.shape[1]], dtype=tf.float32, name="inpu
 
 ys = tf.placeholder(shape=[None, 1], dtype=tf.float32, name="y_true")
 
-
-l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.sigmoid)
-# l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.tanh)
+# l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.sigmoid)
+l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.tanh)
 # l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.relu)
 """
 relu 激活函数存在梯度消失现象
 """
 
-prediction = add_layer(l1, 100, 1, activation_function=None)
+l2 = add_layer(l1, 100, 10, activation_function=tf.nn.tanh)
 
+prediction = add_layer(l2, 10, 1, activation_function=None)
 
 loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),
-                     reduction_indices=[1]))
-
+                                    reduction_indices=[1]))
 
 train_step = tf.train.GradientDescentOptimizer(learning_rate=0.01).minimize(loss)
 
@@ -76,11 +74,8 @@ init = tf.global_variables_initializer()
 
 feed_dict_train = {ys: y_train, xs: x_train}
 
-
-
 # Start training
 with tf.Session() as sess:
-
     # Run the initializer
     sess.run(init)
 
@@ -93,15 +88,15 @@ with tf.Session() as sess:
             # print(sess.run(loss, feed_dict={xs: x_train, ys: y_train}))
             a = sess.run(loss, feed_dict={xs: x_test, ys: y_test})
             print(a, type(a))
-            #
+
             # 当误差达到阈值 储存结果
-            if float(a) < 0.166:
+            if float(a) < 0.1:
                 y_pre = sess.run(prediction, feed_dict={xs: test_df})
                 y_pre = y_mm.inverse_transform(y_pre)
                 pre = pd.DataFrame(y_pre, columns=["0"])
                 pre = pre["0"]
                 save_result(list(pre))
-                break
+
 
 """
 画出平面图形 
@@ -114,4 +109,3 @@ plt.show()
 
 
 """
-
