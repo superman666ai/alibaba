@@ -3,6 +3,10 @@ import tensorflow as tf
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
+import tensorflow as tf
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import scale
+
 import numpy as np
 
 df = pd.read_csv('data/zhengqi_train.txt', sep='\t')
@@ -11,86 +15,79 @@ test_df = pd.read_csv('data/zhengqi_test.txt', sep='\t')
 
 # 数据处理
 
-# 剔除认为不重要的特征
-df.drop(['V5', 'V17', 'V28', 'V22', 'V11', 'V9'], axis=1, inplace=True)
-test_df.drop(['V5', 'V17', 'V28', 'V22', 'V11', 'V9'], axis=1, inplace=True)
-
 x = df.iloc[:, :-1]
-y = df.target
-
-# 标准化特征
-mm = MinMaxScaler()
-x = mm.fit_transform(x)
-
-# 结果集标准
-test_df = mm.transform(test_df)
+y = df["target"]
+y = np.array(y)[:, np.newaxis]
 
 # 数据集划分
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=1)
+
+x_train = scale(x_train)
+x_test = scale(x_test)
+
+y_train = scale(y_train)
+y_test = scale(y_test)
 
 
 # 添加层
 
 # 创建一个神经网络层
-def add_layer(input, in_size, out_size, activation_function=None):
-    """
-    :param input: 数据输入
-    :param in_size: 输入大小（前一层神经元个数）
-    :param out_size: 输出大小（本层神经元个数）
-    :param activation_function: 激活函数（默认没有）
-    :return:
-    """
-    Weight = tf.Variable(tf.random_normal([in_size, out_size]))
 
+def add_layer(inputs, in_size, out_size, activation_function=None):
+    Weights = tf.Variable(tf.random_normal([in_size, out_size]))
     biases = tf.Variable(tf.zeros([1, out_size]) + 0.1)
-    W_mul_x_plus_b = tf.matmul(input, Weight) + biases
-
-    if activation_function == None:
-
-        output = W_mul_x_plus_b
+    Wx_plus_b = tf.matmul(inputs, Weights) + biases
+    if activation_function is None:
+        outputs = Wx_plus_b
     else:
-        output = activation_function(W_mul_x_plus_b)
+        outputs = activation_function(Wx_plus_b)
+    return outputs
 
 
-# 1.训练的数据
+xs = tf.placeholder(shape=[None, x_train.shape[1]], dtype=tf.float32, name="inputs")
 
-# print(x_train.shape)
+ys = tf.placeholder(shape=[None, 1], dtype=tf.float32, name="y_true")
 
-# y_data = y_train
+keep_prob_s = tf.placeholder(dtype=tf.float32)
 
-# 2.定义节点准备接收数据
+l1 = add_layer(xs, 38, 10, activation_function=tf.nn.relu)
 
-xs = tf.placeholder(tf.float32, [None, 32])
-ys = tf.placeholder(tf.float32, [None, 1])
+pred = add_layer(l1, 10, 1)
 
-# 3.定义神经层：隐藏层和预测层
-# add hidden layer 输入值是 xs，在隐藏层有 10 个神经元
+pred = tf.add(pred, 0, name='pred')
 
-l1 = add_layer(xs, 1, 32, activation_function=tf.nn.relu)
+loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - pred), reduction_indices=[1]))  # mse
 
-# add output layer 输入值是隐藏层 l1，在预测层输出 1 个结果
+tf.summary.scalar("loss", tensor=loss)
+
+train_op = tf.train.AdamOptimizer(learning_rate=0.01).minimize(loss)
+
+train_step = tf.train.GradientDescentOptimizer(0.1).minimize(loss)
+
+init = tf.global_variables_initializer()
+
+
+keep_prob=1  # 防止过拟合，取值一般在0.5到0.8。我这里是1，没有做过拟合处理
+ITER =5000  # 训练次数
+
+
+feed_dict_train = {ys: y, xs: X, keep_prob_s: keep_prob}
+
+
+with tf.Session() as sess:
+    saver = tf.train.Saver(tf.global_variables(), max_to_keep=15)
+    merged = tf.summary.merge_all()
+    writer = tf.summary.FileWriter(logdir="nn_boston_log", graph=sess.graph)  # 写tensorbord
+    sess.run(init)
+    for i in range(n):
+        _loss, _ = sess.run([loss, train_op], feed_dict=feed_dict_train)
+
+        if i % 100 == 0:
+            print("epoch:%d\tloss:%.5f" % (i, _loss))
+            y_pred = sess.run(pred, feed_dict=feed_dict_train)
+            rs = sess.run(merged, feed_dict=feed_dict_train)
+            writer.add_summary(summary=rs, global_step=i)  # 写tensorbord
+
+# l1 = add_layer(xs, 1, 10, activation_function=tf.nn.relu)
+#
 # prediction = add_layer(l1, 10, 1, activation_function=None)
-
-# 4.定义 loss 表达式
-# the error between prediciton and real data
-# loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),
-# reduction_indices=[1]))
-
-# 5.选择 optimizer 使 loss 达到最小
-# 这一行定义了用什么方式去减少 loss，学习率是 0.1
-# train_step = tf.train.GradientDescentOptimizer(0.1).minimize(loss)
-
-
-# important step 对所有变量进行初始化
-# init = tf.initialize_all_variables()
-# sess = tf.Session()
-# 上面定义的都没有运算，直到 sess.run 才会开始运算
-# sess.run(init)
-
-# 迭代 1000 次学习，sess.run optimizer
-# for i in range(1000):
-# training train_step 和 loss 都是由 placeholder 定义的运算，所以这里要用 feed 传入参数
-# sess.run(train_step, feed_dict={xs: x_data, ys: y_data})
-# if i % 50 == 0:
-# to see the step improvement
-# print(sess.run(loss, feed_dict={xs: x_data, ys: y_data}))
