@@ -59,7 +59,9 @@ ys = tf.placeholder(shape=[None, 1], dtype=tf.float32, name="y_true")
 l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.sigmoid)
 # l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.tanh)
 # l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.relu)
-
+"""
+relu 激活函数存在梯度消失现象
+"""
 
 prediction = add_layer(l1, 100, 1, activation_function=None)
 
