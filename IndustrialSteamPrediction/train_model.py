@@ -17,6 +17,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.pipeline import make_pipeline
 
 from utils import plot_learning_curve
+from utils import save_result
 
 df = pd.read_csv('data/zhengqi_train.txt', sep='\t')
 
@@ -54,10 +55,10 @@ def simple_regression(x_train, x_test, y_train, y_test):
     # model = Ridge(alpha=0.1)
 
     # lasso 回归
-    # model = Lasso(alpha=0.1)
+    model = Lasso(alpha=0.1)
 
     # kernal ridge
-    model = KernelRidge(kernel='rbf', alpha=0.1)
+    # model = KernelRidge(kernel='rbf', alpha=0.1)
     # model = KernelRidge(kernel='linear', alpha=0.1)
     # model = KernelRidge(kernel='sigmoid', alpha=0.1)
     # model = KernelRidge(kernel='poly', alpha=0.1)
@@ -77,8 +78,9 @@ def simple_regression(x_train, x_test, y_train, y_test):
     print("mean_squared_error", mean_squared_error(y_test, y_pred))
 
     plot_learning_curve(model, "rate", x_train, y_train)
-    # result = model.predict(test_df)
-    # print(result)
+    result = model.predict(test_df)
+    save_result(result)
+    print(result)
 
 
 # svm
@@ -180,7 +182,7 @@ def mlp_model(x_train, x_test, y_train, y_test):
 
 if __name__ == "__main__":
     # 简单回归
-    # simple_regression(x_train, x_test, y_train, y_test)
+    simple_regression(x_train, x_test, y_train, y_test)
 
     # svm
     # svr_regression(x_train, x_test, y_train, y_test)
@@ -192,7 +194,7 @@ if __name__ == "__main__":
     # random_forest_regression(x_train, x_test, y_train, y_test)
 
     # 神经
-    mlp_model(x_train, x_test, y_train, y_test)
+    # mlp_model(x_train, x_test, y_train, y_test)
 
     """
     参数调优：

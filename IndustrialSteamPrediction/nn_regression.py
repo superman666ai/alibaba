@@ -2,24 +2,34 @@
 import tensorflow as tf
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+import tensorflow as tf
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import scale
+from utils import save_result
 import numpy as np
 
 df = pd.read_csv('data/zhengqi_train.txt', sep='\t')
 
 test_df = pd.read_csv('data/zhengqi_test.txt', sep='\t')
 
+# 剔除认为不重要的特征
+df.drop(['V5', 'V17', 'V28', 'V22', 'V11', 'V9'], axis=1, inplace=True)
+test_df.drop(['V5', 'V17', 'V28', 'V22', 'V11', 'V9'], axis=1, inplace=True)
+
 # 数据处理
 
 x = df.iloc[:, :-1]
-y = df.target
+y = df["target"]
 
-# 标准化特征
-mm = MinMaxScaler()
-x = mm.fit_transform(x)
+y = np.array(y)[:, np.newaxis]
 
-# 结果集标准
-test_df = mm.transform(test_df)
+x_mm = StandardScaler()
+x = x_mm.fit_transform(x)
+test_df = x_mm.fit_transform(test_df)
+
+y_mm = StandardScaler()
+y = y_mm.fit_transform(y)
 
 # 数据集划分
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=1)
@@ -28,51 +38,74 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random
 # 添加层
 
 # 创建一个神经网络层
-def add_layer(input, in_size, out_size, activation_function=None):
-    """
-    :param input: 数据输入
-    :param in_size: 输入大小（前一层神经元个数）
-    :param out_size: 输出大小（本层神经元个数）
-    :param activation_function: 激活函数（默认没有）
-    :return:
-    """
-    Weight = tf.Variable(tf.random_normal([in_size, out_size]))
 
+def add_layer(inputs, in_size, out_size, activation_function=None):
+    Weights = tf.Variable(tf.random_normal([in_size, out_size]))
     biases = tf.Variable(tf.zeros([1, out_size]) + 0.1)
-
-    W_mul_x_plus_b = tf.matmul(input, Weight) + biases
-
-    if activation_function == None:
-
-        output = W_mul_x_plus_b
+    Wx_plus_b = tf.matmul(inputs, Weights) + biases
+    if activation_function is None:
+        outputs = Wx_plus_b
     else:
-        output = activation_function(W_mul_x_plus_b)
+        outputs = activation_function(Wx_plus_b)
+    return outputs
 
 
-from tensorflow.examples.tutorials.mnist import input_data
+xs = tf.placeholder(shape=[None, x_train.shape[1]], dtype=tf.float32, name="inputs")
 
-mnist = input_data.read_data_sets("MNIST_data/",one_hot=True)
+ys = tf.placeholder(shape=[None, 1], dtype=tf.float32, name="y_true")
 
-# sess = tf.InteractiveSession()
-#
-# x = tf.placeholder(tf.float32,[None,784])
-# w = tf.Variable(tf.zeros([784,10]))
-# b = tf.Variable(tf.zeros([10]))
-#
-# y_pre = tf.nn.softmax(tf.matmul(x,w) + b) #预测值,预测标签
-#
-# y_true = tf.placeholder(tf.float32,[None,10])#标签
-# cross_entropy = tf.reduce_mean(tf.reduce_sum(-y_true * tf.log(y_pre), reduction_indices=[1]))
-#
-# train = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
-#
-# tf.global_variables_initializer().run()
-#
-#
-# for i in range(1000):
-#     batch_x,batch_y = mnist.train.next_batch(100)
-#     sess.run(train,feed_dict={x:batch_x,y_true:batch_y})
-# correct_prediction = tf.equal(tf.argmax(y_pre,1),tf.argmax(y_true,1))
-# accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
-# print(accuracy.eval({x: mnist.test.images,y_true: mnist.test.labels}))
+# l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.sigmoid)
+l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.tanh)
+# l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.relu)
+"""
+relu 激活函数存在梯度消失现象
+"""
 
+l2 = add_layer(l1, 100, 10, activation_function=tf.nn.tanh)
+
+prediction = add_layer(l2, 10, 1, activation_function=None)
+
+loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),
+                                    reduction_indices=[1]))
+
+train_step = tf.train.GradientDescentOptimizer(learning_rate=0.01).minimize(loss)
+
+init = tf.global_variables_initializer()
+
+feed_dict_train = {ys: y_train, xs: x_train}
+
+# Start training
+with tf.Session() as sess:
+    # Run the initializer
+    sess.run(init)
+
+    # Fit all training data
+    for i in range(100000):
+
+        sess.run(train_step, feed_dict={xs: x_train, ys: y_train})
+        if i % 50 == 0:
+            # to see the step improvement
+            # print(sess.run(loss, feed_dict={xs: x_train, ys: y_train}))
+            a = sess.run(loss, feed_dict={xs: x_test, ys: y_test})
+            print(a, type(a))
+
+            # 当误差达到阈值 储存结果
+            if float(a) < 0.1:
+                y_pre = sess.run(prediction, feed_dict={xs: test_df})
+                y_pre = y_mm.inverse_transform(y_pre)
+                pre = pd.DataFrame(y_pre, columns=["0"])
+                pre = pre["0"]
+                save_result(list(pre))
+
+
+"""
+画出平面图形 
+# plot the real data
+fig = plt.figure()
+ax = fig.add_subplot(1,1,1)
+ax.scatter(x_train, y_train)
+plt.ion()#本次运行请注释，全局运行不要注释
+plt.show()
+
+
+"""
