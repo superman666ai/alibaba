@@ -27,8 +27,12 @@ test_df = load_data(test_path)
 x = train_df.iloc[:, :-1]
 y = train_df.target
 y = np.array(y)[:, np.newaxis]
-
+print(x.shape)
 # 特征处理
+x = x[['V0', 'V1', 'V2', 'V4', 'V8', 'V12', 'V27', 'V31', 'V37']]
+
+test_df = test_df[['V0', 'V1', 'V2', 'V4', 'V8', 'V12', 'V27', 'V31', 'V37']]
+
 # # 特征处理 筛选特征
 # clf = ExtraTreesRegressor()
 # clf = clf.fit(x, y)
@@ -107,7 +111,7 @@ test_loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - test_pre3),
 loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),
                                     reduction_indices=[1]))
 
-train_step = tf.train.GradientDescentOptimizer(learning_rate=0.01).minimize(loss)
+train_step = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(loss)
 
 init = tf.global_variables_initializer()
 
@@ -130,7 +134,7 @@ with tf.Session() as sess:
 
             # 当误差达到阈值 储存结果
 
-            if float(a) < 0.04:
+            if float(a) < 0.2:
                 y_pre = sess.run(prediction, feed_dict={xs: test_df})
                 y_pre = y_mm.inverse_transform(y_pre)
                 pre = pd.DataFrame(y_pre, columns=["0"])
