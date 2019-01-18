@@ -8,6 +8,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import learning_curve
 from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import ExtraTreesRegressor
+from sklearn.feature_selection import SelectFromModel
 
 
 def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
@@ -53,7 +55,7 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
     plt.show()
 
 
-def model_gridsearch(estimator, param,x_train, x_test, y_train, y_test, cv=5):
+def model_gridsearch(estimator, param, x_train, x_test, y_train, y_test, cv=5):
     """
 
     :param estimator:
@@ -82,7 +84,6 @@ def model_gridsearch(estimator, param,x_train, x_test, y_train, y_test, cv=5):
     print(gc.cv_results_)
 
 
-
 def save_result(result):
     """
 
@@ -93,3 +94,23 @@ def save_result(result):
     result_df = pd.DataFrame(result, columns=['target'])
     result_df.to_csv("result.txt", index=False, header=False)
 
+
+def load_data(path, **kwargs):
+    # 读取数据 分析
+    df = pd.read_csv(path, sep=kwargs["sep"])
+    x = df.iloc[:, :-1]
+    y = df.target
+    y = np.array(y)[:, np.newaxis]
+    x, y = et_method(x, y)
+    return x, y
+
+
+# 处理特征数量
+def et_method(x, y):
+    clf = ExtraTreesRegressor()
+    clf = clf.fit(x, y)
+
+    # 筛选特征
+    model = SelectFromModel(clf, prefit=True)
+    x = model.transform(x)
+    return x, y
