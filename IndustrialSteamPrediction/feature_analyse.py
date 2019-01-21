@@ -28,7 +28,7 @@ def linear_feature(x, y):
 
     for i in x_names:
         xa = x[i]
-        plt.scatter(xa, y)
+        plt.scatter(y, xa)
         plt.title(i)
         # plt.show()
         plt.savefig("image2/" + i + ".png")

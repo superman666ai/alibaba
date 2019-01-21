@@ -15,6 +15,7 @@ from sklearn.ensemble import GradientBoostingRegressor, ExtraTreesRegressor
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.neural_network import MLPRegressor
 from sklearn.pipeline import make_pipeline
+import xgboost as xgb
 
 from utils import plot_learning_curve
 from utils import save_result
@@ -138,7 +139,10 @@ def random_forest_regression(x_train, x_test, y_train, y_test):
     # model =ExtraTreesRegressor()
 
     # 梯度提升
-    model = GradientBoostingRegressor()
+    # model = GradientBoostingRegressor()
+
+    # xgboost
+    model = xgb.XGBRegressor()
 
     model.fit(x_train, y_train)
     score = model.score(x_test, y_test)
@@ -182,7 +186,7 @@ def mlp_model(x_train, x_test, y_train, y_test):
 
 if __name__ == "__main__":
     # 简单回归
-    simple_regression(x_train, x_test, y_train, y_test)
+    # simple_regression(x_train, x_test, y_train, y_test)
 
     # svm
     # svr_regression(x_train, x_test, y_train, y_test)
@@ -191,7 +195,7 @@ if __name__ == "__main__":
     # bayes_regression(x_train, x_test, y_train, y_test)
 
     # 随机森林
-    # random_forest_regression(x_train, x_test, y_train, y_test)
+    random_forest_regression(x_train, x_test, y_train, y_test)
 
     # 神经
     # mlp_model(x_train, x_test, y_train, y_test)
