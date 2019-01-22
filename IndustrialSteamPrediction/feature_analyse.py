@@ -8,14 +8,29 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.ensemble import ExtraTreesRegressor
-from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import SelectKBest, SelectPercentile
+from sklearn.feature_selection import chi2
 import seaborn as sns
 from sklearn.feature_selection import SelectFromModel
+from sklearn.feature_selection import f_regression, f_classif, mutual_info_regression
+from sklearn.preprocessing import MinMaxScaler
+from scipy.stats import pearsonr
 
 # 读取数据 分析
 df = pd.read_csv('data/zhengqi_train.txt', sep='\t')
 x = df.iloc[:, :-1]
 y = df.target
+# y = np.array(y)[:, np.newaxis]
+
+# x_mm = MinMaxScaler()
+# x = x_mm.fit_transform(x)
+# # print(x)
+# y_mm = MinMaxScaler()
+# y = y_mm.fit_transform(y)
+
+
+#
+# print(y)
 
 
 # print(x.shape)
@@ -73,8 +88,8 @@ def et_method(x, y):
         plt.text(x, y, '%.2f' % y, ha='center', va='bottom')
     plt.show()
 
-def plot_feature_scores(x, y, names=None):
 
+def plot_feature_scores(x, y, names=None):
     if not names:
         names = [x for x in range(x.shape[1])]
 
@@ -89,7 +104,6 @@ def plot_feature_scores(x, y, names=None):
 
     sorted_scores = [each[1] for each in sorted_named_scores]
     sorted_names = [each[0] for each in sorted_named_scores]
-
 
     y_pos = np.arange(len(names))  # 从上而下的绘图顺序
 
@@ -108,6 +122,7 @@ def plot_feature_scores(x, y, names=None):
         ax.text(score + 20, pos, '%.1f' % score, ha='center', va='bottom', fontsize=8)
 
     plt.show()
+
 
 def feature_spread(x, y):
     # 训练数据分布情况
@@ -130,8 +145,23 @@ def feature_spread(x, y):
     plt.show()
 
 
+def ka_fang(x, y):
+    print(y.values)
+    # model1 = SelectKBest(f_regression, k=5)  # 选择k个最佳特征
+    # model1 = SelectKBest(f_regression, k=5)  # 选择k个最佳特征
+
+    # model1 = SelectPercentile(f_regression, percentile=80)  # 选择k个最佳特征
+
+    model1 = SelectPercentile(mutual_info_regression, percentile=80)  # 选择k个最佳特征
+
+    x = model1.fit_transform(x, y.values)
+    print(x.shape)
+    print(model1.scores_)
+
+
 if __name__ == "__main__":
     # et_method(x, y)
     # plot_feature_scores(x, y)
     # feature_spread(x, y)
-    linear_feature(x, y)
+    # linear_feature(x, y)
+    ka_fang(x, y)
