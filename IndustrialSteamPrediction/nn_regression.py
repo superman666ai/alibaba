@@ -29,9 +29,9 @@ y = train_df.target
 y = np.array(y)[:, np.newaxis]
 print(x.shape)
 # 特征处理
-x = x[['V0', 'V1', 'V2', 'V4', 'V8', 'V12', 'V27', 'V31', 'V37']]
+# x = x[['V0', 'V1', 'V2', 'V4', 'V8', 'V12', 'V27', 'V31', 'V37']]
 
-test_df = test_df[['V0', 'V1', 'V2', 'V4', 'V8', 'V12', 'V27', 'V31', 'V37']]
+# test_df = test_df[['V0', 'V1', 'V2', 'V4', 'V8', 'V12', 'V27', 'V31', 'V37']]
 
 # # 特征处理 筛选特征
 # clf = ExtraTreesRegressor()
@@ -80,38 +80,32 @@ def add_layer(inputs, in_size, out_size, activation_function=None):
         outputs = Wx_plus_b
     else:
         outputs = activation_function(Wx_plus_b)
-    return outputs, Weights, biases
+    return outputs
 
 
 xs = tf.placeholder(shape=[None, x_train.shape[1]], dtype=tf.float32, name="inputs")
 ys = tf.placeholder(shape=[None, 1], dtype=tf.float32, name="y_true")
 drop_out = 0.6
 
-# l1, Weights1, biases1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.sigmoid)
-l1, Weights1, biases1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.tanh)
-# l1, Weights1, biases1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.relu)
+l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.sigmoid)
+# l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.tanh)
+# l1 = add_layer(xs, x_train.shape[1], 100, activation_function=tf.nn.relu)
 
 l1 = layer1 = tf.nn.dropout(l1, drop_out)
 
-# l2, Weights2, biases2 = add_layer(l1, 100, 10, activation_function=tf.nn.sigmoid)
-l2, Weights2, biases2 = add_layer(l1, 100, 10, activation_function=tf.nn.tanh)
-# l2, Weights2, biases2 = add_layer(l1, 100, 10, activation_function=tf.nn.relu)
+l2 = add_layer(l1, 100, 10, activation_function=tf.nn.sigmoid)
+# l2 = add_layer(l1, 100, 10, activation_function=tf.nn.tanh)
+# l2 = add_layer(l1, 100, 10, activation_function=tf.nn.relu)
 
 l2 = tf.nn.dropout(l2, drop_out)
 
-prediction, Weights3, biases3 = add_layer(l2, 10, 1, activation_function=None)
 
-test_pre1 = tf.matmul(xs, Weights1) + biases1
-test_pre2 = tf.matmul(test_pre1, Weights2) + biases2
-test_pre3 = tf.matmul(test_pre2, Weights3) + biases3
-
-test_loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - test_pre3),
-                                         reduction_indices=[1]))
+prediction = add_layer(l2, 10, 1, activation_function=None)
 
 loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),
                                     reduction_indices=[1]))
 
-train_step = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(loss)
+train_step = tf.train.GradientDescentOptimizer(learning_rate=0.01).minimize(loss)
 
 init = tf.global_variables_initializer()
 
@@ -123,18 +117,19 @@ with tf.Session() as sess:
     sess.run(init)
 
     # Fit all training data
-    for i in range(100000):
-
+    for i in range(10000):
         sess.run(train_step, feed_dict=feed_dict_train)
+
         if i % 50 == 0:
-            a = sess.run(loss, feed_dict=feed_dict_train)
-            print(a)
-            a = sess.run(test_loss, feed_dict={xs: x_test, ys: y_test})
-            print(a, type(a))
 
-            # 当误差达到阈值 储存结果
+            train_acc = sess.run(loss, feed_dict=feed_dict_train)
+            print("TRAIN ACCURACY: %.3f" % (train_acc))
 
-            if float(a) < 0.2:
+            feeds = {xs: x_test, ys: y_test}
+            test_acc = sess.run(loss, feed_dict=feeds)
+            print("TEST ACCURACY: %.3f" % (test_acc))
+
+            if float(test_acc) < 0.2:
                 y_pre = sess.run(prediction, feed_dict={xs: test_df})
                 y_pre = y_mm.inverse_transform(y_pre)
                 pre = pd.DataFrame(y_pre, columns=["0"])
