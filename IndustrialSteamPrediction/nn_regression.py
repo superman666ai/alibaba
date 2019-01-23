@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import scale
 from utils import save_result
 import numpy as np
+from sklearn.feature_selection import SelectKBest, f_regression, SelectPercentile, mutual_info_regression
 
 train_path = 'data/zhengqi_train.txt'
 test_path = 'data/zhengqi_test.txt'
@@ -26,12 +27,24 @@ test_df = load_data(test_path)
 
 x = train_df.iloc[:, :-1]
 y = train_df.target
-y = np.array(y)[:, np.newaxis]
-print(x.shape)
+
+# print(x.shape)
 # 特征处理
 # x = x[['V0', 'V1', 'V2', 'V4', 'V8', 'V12', 'V27', 'V31', 'V37']]
 
 # test_df = test_df[['V0', 'V1', 'V2', 'V4', 'V8', 'V12', 'V27', 'V31', 'V37']]
+
+# 卡方 选择
+
+model1 = SelectPercentile(mutual_info_regression, percentile=95)  # 选择k个最佳特征
+x = model1.fit_transform(x, y.values)
+test_df = model1.transform(test_df)
+print(x)
+print(model1.scores_)
+
+y = np.array(y)[:, np.newaxis]
+
+
 
 # # 特征处理 筛选特征
 # clf = ExtraTreesRegressor()
@@ -41,8 +54,6 @@ print(x.shape)
 # x = model.transform(x)
 # test_df = model.transform(test_df)
 
-print(x.shape)
-print(y.shape)  # 数据处理
 
 # PCA过程
 # pca = PCA(n_components=0.9)
@@ -55,6 +66,8 @@ x = x_mm.fit_transform(x)
 test_df = x_mm.transform(test_df)
 y_mm = MinMaxScaler()
 y = y_mm.fit_transform(y)
+#
+# print(y)
 
 # # # 标准化数据 scaler
 # x_mm = StandardScaler()
@@ -105,13 +118,14 @@ prediction = add_layer(l2, 10, 1, activation_function=None)
 loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),
                                     reduction_indices=[1]))
 
-train_step = tf.train.GradientDescentOptimizer(learning_rate=0.01).minimize(loss)
+train_step = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(loss)
 
 init = tf.global_variables_initializer()
 
 feed_dict_train = {ys: y_train, xs: x_train}
 
 # Start training
+
 with tf.Session() as sess:
     # Run the initializer
     sess.run(init)
