@@ -1,33 +1,11 @@
-# -*- encoding:utf-8 -*-
+# -*- coding: utf-8 -*-
+
+# @Time    : 2019-01-24 8:48
+# @Author  : jian
+# @File    : mofan_rnn.py
 import tensorflow as tf
-import pandas as pd
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
-
-
-train_path = 'data/zhengqi_train.txt'
-test_path = 'data/zhengqi_test.txt'
-
-
-def load_data(path):
-    df = pd.read_csv(path, sep="\t")
-    return df
-
-
-train_df = load_data(train_path)
-test_df = load_data(test_path)
-
-x = train_df.iloc[:, :-1]
-y = train_df.target
-y = np.array(y)[:, np.newaxis]
-
-# 标准化数据 minmax
-x_mm = MinMaxScaler()
-x = x_mm.fit_transform(x)
-test_df = x_mm.transform(test_df)
-y_mm = MinMaxScaler()
-y = y_mm.fit_transform(y)
-
+import matplotlib.pyplot as plt
 
 BATCH_START = 0  # 建立 batch data 时候的 index
 TIME_STEPS = 20  # backpropagation through time 的 time_steps
@@ -37,6 +15,16 @@ OUTPUT_SIZE = 1  # cos 数据输出 size
 CELL_SIZE = 10  # RNN 的 hidden unit size
 LR = 0.006  # learning rate
 
+
+def get_batch():
+    global BATCH_START, TIME_STEPS
+    # xs shape (50batch, 20steps)
+    xs = np.arange(BATCH_START, BATCH_START + TIME_STEPS * BATCH_SIZE).reshape((BATCH_SIZE, TIME_STEPS)) / (10 * np.pi)
+    seq = np.sin(xs)
+    res = np.cos(xs)
+    BATCH_START += TIME_STEPS
+    # returned seq, res and xs: shape (batch, step, input)
+    return [seq[:, :, np.newaxis], res[:, :, np.newaxis], xs]
 
 
 class LSTMRNN(object):
@@ -118,35 +106,35 @@ class LSTMRNN(object):
 
 if __name__ == '__main__':
     # 搭建 LSTMRNN 模型
-    # seq, res, xs = get_batch()  # 提取 batch data
-
-    # print(xs)
-    model = LSTMRNN(TIME_STEPS, INPUT_SIZE, OUTPUT_SIZE, CELL_SIZE, BATCH_SIZE)
-    sess = tf.Session()
+    seq, res, xs = get_batch()  # 提取 batch data
+    print(xs)
+    # model = LSTMRNN(TIME_STEPS, INPUT_SIZE, OUTPUT_SIZE, CELL_SIZE, BATCH_SIZE)
+    # sess = tf.Session()
     # sess.run(tf.initialize_all_variables()) # tf 马上就要废弃这种写法
     # 替换成下面的写法:
-    sess.run(tf.global_variables_initializer())
+    # sess.run(tf.global_variables_initializer())
 
     # 训练 200 次
-    for i in range(200):
-        # seq, res, xs = get_batch()  # 提取 batch data
-        if i == 0:
-            # 初始化 data
-            feed_dict = {
-                model.xs: x,
-                model.ys: y,
-            }
-        else:
-            feed_dict = {
-                model.xs: x,
-                model.ys: y,
-                model.cell_init_state: 2  # 保持 state 的连续性
-            }
-
-        _, cost, state, pred = sess.run(
-            [model.train_op, model.cost, model.cell_final_state, model.pred],
-            feed_dict=feed_dict)
-
-        # 打印 cost 结果
-        if i % 20 == 0:
-            print('cost: ', round(cost, 4))
+    # for i in range(200):
+    #     seq, res, xs = get_batch()  # 提取 batch data
+    #     if i == 0:
+    #         # 初始化 data
+    #         feed_dict = {
+    #             model.xs: seq,
+    #             model.ys: res,
+    #         }
+    #     else:
+    #         feed_dict = {
+    #             model.xs: seq,
+    #             model.ys: res,
+    #             model.cell_init_state: state  # 保持 state 的连续性
+    #         }
+    #
+    #     # 训练
+    #     _, cost, state, pred = sess.run(
+    #         [model.train_op, model.cost, model.cell_final_state, model.pred],
+    #         feed_dict=feed_dict)
+    #
+    #     # 打印 cost 结果
+    #     if i % 20 == 0:
+    #         print('cost: ', round(cost, 4))
