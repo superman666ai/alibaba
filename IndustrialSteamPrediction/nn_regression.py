@@ -27,7 +27,7 @@ test_df = load_data(test_path)
 
 x = train_df.iloc[:, :-1]
 y = train_df.target
-
+y = np.array(y)[:, np.newaxis]
 # print(x.shape)
 # 特征处理
 # x = x[['V0', 'V1', 'V2', 'V4', 'V8', 'V12', 'V27', 'V31', 'V37']]
@@ -36,37 +36,38 @@ y = train_df.target
 
 # 卡方 选择
 
-model1 = SelectPercentile(mutual_info_regression, percentile=95)  # 选择k个最佳特征
-x = model1.fit_transform(x, y.values)
-test_df = model1.transform(test_df)
-print(x)
-print(model1.scores_)
+# model1 = SelectPercentile(mutual_info_regression, percentile=95)  # 选择k个最佳特征
+# x = model1.fit_transform(x, y.values)
+# test_df = model1.transform(test_df)
+# print(x)
+# print(model1.scores_)
+#
+# y = np.array(y)[:, np.newaxis]
+#
 
-y = np.array(y)[:, np.newaxis]
 
-
-
-# # 特征处理 筛选特征
+# 特征处理 筛选特征
 # clf = ExtraTreesRegressor()
 # clf = clf.fit(x, y)
 #
 # model = SelectFromModel(clf, prefit=True)
 # x = model.transform(x)
 # test_df = model.transform(test_df)
-
+print(x.shape)
 
 # PCA过程
-# pca = PCA(n_components=0.9)
-# pca.fit(x)
-# test_df = pca.transform(test_df)
+pca = PCA(n_components=0.9)
+x = pca.fit_transform(x)
+test_df = pca.transform(test_df)
 
+print(x.shape)
 # 标准化数据 minmax
 x_mm = MinMaxScaler()
 x = x_mm.fit_transform(x)
 test_df = x_mm.transform(test_df)
 y_mm = MinMaxScaler()
 y = y_mm.fit_transform(y)
-#
+
 # print(y)
 
 # # # 标准化数据 scaler
@@ -118,7 +119,7 @@ prediction = add_layer(l2, 10, 1, activation_function=None)
 loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),
                                     reduction_indices=[1]))
 
-train_step = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(loss)
+train_step = tf.train.GradientDescentOptimizer(learning_rate=0.01).minimize(loss)
 
 init = tf.global_variables_initializer()
 
@@ -131,7 +132,7 @@ with tf.Session() as sess:
     sess.run(init)
 
     # Fit all training data
-    for i in range(10000):
+    for i in range(100000):
         sess.run(train_step, feed_dict=feed_dict_train)
 
         if i % 50 == 0:
@@ -143,7 +144,7 @@ with tf.Session() as sess:
             test_acc = sess.run(loss, feed_dict=feeds)
             print("TEST ACCURACY: %.3f" % (test_acc))
 
-            if float(test_acc) < 0.2:
+            if float(test_acc) < 0.04:
                 y_pre = sess.run(prediction, feed_dict={xs: test_df})
                 y_pre = y_mm.inverse_transform(y_pre)
                 pre = pd.DataFrame(y_pre, columns=["0"])
