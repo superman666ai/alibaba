@@ -46,49 +46,75 @@ print(hasattr(A, 'func'))
 
 class A():
     name = 'python'
+
     def func(self):
         return 'Hello world'
 
+
 print(getattr(A, 'name'))
-#
 # print(getattr(A, 'age'))       # age变量不存在则报错
 
-print(getattr(A, 'age', 20)) # 设置默认值
+print(getattr(A, 'age', 20))  # 设置默认值
 
-# getattr(A, 'func')
-# < unbound
-# method
-# A.func >
-#
-# getattr(A, 'func')()　　　　  # func()函数不能被A类对象调用，所以报错
-#
-# Traceback(most
-# recent
-# call
-# last):
-# File
-# "<pyshell#470>", line
-# 1, in < module >
-# getattr(A, 'func')()
-# TypeError: unbound
-# method
-# func()
-# must
-# be
-# called
-# with A instance as first argument (got nothing instead)
-#
-# getattr(A(), 'func')()
+print(getattr(A, 'func'))
+# print(getattr(A, 'func')())  # func()函数不能被A类对象调用，所以报错
+
+print(getattr(A(), 'func')())
+
+
 # 'Hello world'
-#
-#
-# class A(object):
-#     　　　　name = 'python'
-#     　　　　@classmethod
-#
-#     　　　　def func(cls):
-#         　　　　　　return 'the method of A object.'
-#
-#
-# getattr(A, 'func')()
+
+
+class A(object):
+    name = 'python'
+
+    @classmethod
+    def func(cls):
+        return 'the method of A object.'
+
+
+print(getattr(A, 'func')())
 # 'the method of A object.'
+
+"""
+3. setattr(object, name, value)
+给object对象的name属性赋值value，
+如果对象原本存在给定的属性name，则setattr会更改属性的值为给定的value；
+如果对象原本不存在属性name，setattr会在对象中创建属性，并赋值为给定的value；
+"""
+
+
+class A():
+    name = 'python'
+
+    def func(self):
+        return 'Hello world'
+
+
+setattr(A, 'name', 'java')
+print(getattr(A, 'name'))
+# 'java'
+
+setattr(A, 'age', 20)
+print(getattr(A, 'age'))
+# 20
+
+
+"""
+　一般先判断对象中是否存在某属性，如果存在则返回；如果不存在，则给对象增加属性并赋值；很简单的if-else判断：
+"""
+
+
+class A():
+    name = 'python'
+    def func(self):
+        return 'Hello world'
+
+
+if hasattr(A, 'age'):
+    print(getattr(A, 'age'))
+else:
+    setattr(A, 'age', 20)
+
+print(getattr(A, 'age'))
+# 20

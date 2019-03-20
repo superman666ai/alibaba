@@ -82,13 +82,15 @@ f = Foo()
 print('f对象所在的内存地址是 %d, B类所在的内存地址是 %d' % (id(f), id(Foo)))
 
 
+# 创建实例时把所有实例的__dict__指向同一个字典,这样它们都具有相同的属性和方法(类的__dict__存储对象属性)
 class Singleton(object):
+    _state = {}
     def __new__(cls, *args, **kwargs):
-        if not hasattr(cls, '_instance'):
-            cls._instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
-        return cls._instance
+        ob = super(Singleton,cls).__new__(cls, *args, **kwargs)
+        ob.__dict__ = cls._state
+        return ob
 
-
+# 类B即为单例类
 class A(Singleton):
     pass
 
