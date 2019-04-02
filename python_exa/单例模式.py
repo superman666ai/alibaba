@@ -16,23 +16,19 @@ init()函数,是为了给函数初始化属性值的
 
 
 # 第一种方法 使用 __new__  推荐使用 方便快捷
-class A_B(object):
+class B():
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, "_instance"):
-            cls._instance = super(A_B, cls).__new__(cls, *args, **kwargs)
+            cls._instance = super(B, cls).__new__(cls, *args, **kwargs)
         return cls._instance
 
 
-class B(A_B):
-    pass
-
-
 d = B()
-print('d对象所在的内存地址是 %d, B类所在的内存地址是 %d' % (id(d), id(B)))
+print('d对象所在的内存地址是 %d, B类所在的内存地址是 %d' % (id(d), id(B())))
 e = B()
-print('e对象所在的内存地址是 %d, B类所在的内存地址是 %d' % (id(e), id(B)))
+print('e对象所在的内存地址是 %d, B类所在的内存地址是 %d' % (id(e), id(B())))
 f = B()
-print('f对象所在的内存地址是 %d, B类所在的内存地址是 %d' % (id(f), id(B)))
+print('f对象所在的内存地址是 %d, B类所在的内存地址是 %d' % (id(f), id(B())))
 
 # 第二种方法 使用 类 @classmethod  并行执行的时候会出现问题 加锁
 # 这种方式实现的单例模式，使用时会有限制，以后实例化必须通过 obj = Singleton.instance()

@@ -78,9 +78,9 @@ class SQList:
         return ret
 
 if __name__ == '__main__':
-    # sqlist = SQList([7, 1, 3, 4, 8, 5, 9, 2, 6])
-    sqlist = SQList([2, 1, 4, 5, 7])
-    # sqlist.bubble_sort_simple()
+    sqlist = SQList([7, 1, 3, 4, 8, 5, 9, 2, 6])
+    # sqlist = SQList([2, 1, 4, 5, 7])
+    sqlist.bubble_sort_simple()
     # sqlist.bubble_sort()
-    sqlist.bubble_sort_advance()
+    # sqlist.bubble_sort_advance()
     print(sqlist)
