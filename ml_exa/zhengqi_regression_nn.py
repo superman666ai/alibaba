@@ -17,8 +17,8 @@ from sklearn.preprocessing import scale
 import numpy as np
 from sklearn.feature_selection import SelectKBest, f_regression, SelectPercentile, mutual_info_regression
 
-train_path = '../data/zhengqi_train.txt'
-test_path = '../data/zhengqi_test.txt'
+train_path = 'data/zhengqi_train.txt'
+test_path = 'data/zhengqi_test.txt'
 
 # load data
 def load_data(path):
