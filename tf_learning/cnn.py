@@ -6,13 +6,13 @@
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import input_data
+from tf_learning import input_data
 
 mnist = input_data.read_data_sets('data/', one_hot=True)
-trainimg = mnist.train.images
-trainlabel = mnist.train.labels
-testimg = mnist.test.images
-testlabel = mnist.test.labels
+trainimg = mnist.train.images[:3000]
+trainlabel = mnist.train.labels[:3000]
+testimg = mnist.test.images[:3000]
+testlabel = mnist.test.labels[:3000]
 
 
 n_input = 784
