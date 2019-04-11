@@ -22,10 +22,12 @@ class C(B):
 a = A()
 
 print(hasattr(a, "pr"))
-getattr(a, 'pr')()
 
+print(A.__bases__)
 
-# print(B.__bases__)
+# 获取继承列表
+
+print(C.mro())
 
 
 def findbases(kls, topclass):
