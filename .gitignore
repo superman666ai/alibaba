@@ -109,3 +109,5 @@ venv.bak/
 *.txt
 *.png
 *tb_kline_m5.csv
+*.pyc
+
